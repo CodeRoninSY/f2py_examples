@@ -1,0 +1,31 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module solve__user__routines 
+    interface solve_user_interface 
+        function f(x) result (fx) ! in :newt_raph:newt_raph.f90:solve:unknown_interface
+            real(kind=8) intent(inout) :: x
+            real(kind=8) :: fx
+        end function f
+        function fp(x) result (fxprime) ! in :newt_raph:newt_raph.f90:solve:unknown_interface
+            real(kind=8) intent(inout) :: x
+            real(kind=8) :: fxprime
+        end function fp
+    end interface solve_user_interface
+end python module solve__user__routines
+python module newt_raph ! in 
+    interface  ! in :newt_raph
+        subroutine solve(f,fp,x0,x,iters,debug) ! in :newt_raph:newt_raph.f90
+            use solve__user__routines
+            external f
+            external fp
+            real(kind=8) intent(in) :: x0
+            real(kind=8) intent(inout) :: x
+            integer intent(inout) :: iters
+            logical intent(in) :: debug
+        end subroutine solve
+    end interface 
+end python module newt_raph
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
