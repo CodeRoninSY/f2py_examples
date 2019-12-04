@@ -347,4 +347,63 @@ subroutine rk45(y, e, y0, t, n)
 
 end subroutine rk45
 
+!! Adams-Bashforth-Moulton PC4
+subroutine pc4(y, y0, t, n)
+    implicit none
+    !f2py intent(callback) f9
+    external f9
+    real(8) :: f9
+    !f2py real(8) ret, arg1, arg2
+    !f2py ret = f9(arg1, arg2)
+
+    real(8), intent(in) :: y0
+    real(8), intent(out) :: y(n)
+    real(8), intent(in) :: t(n)
+    integer n, i
+    !f2py depend(t) n
+
+    real(8) :: h, k1, k2, k3, k4
+    real(8) :: f0, f1, f2, f3, w, fw
+
+    y(1) = y0
+    h = ((t(n) - t(1)) / (n-1))
+
+    write(ou,'(//A)') "... PC4 ..."
+    write(ou,'("# h = ", F12.5)') h
+    write(ou,'("t       ",4x,"f(t)     ")')
+    write(ou,'("--------",4x,"----------------")')
+
+    f1 = 0.0
+    f2 = 0.0
+    f3 = 0.0
+
+    do i = 1, min(3, n-1)
+      write(ou,'(F12.5,4x,ES23.16)') t(i), y(i)
+      h = t(i+1) - t(i)
+      f0 = f9(y(i), t(i))
+      k1 = h * f0
+      k2 = h * f9(y(i) + 0.5 * k1, t(i) + 0.5 * h)
+      k3 = h * f9(y(i) + 0.5 * k2, t(i) + 0.5 * h)
+      k4 = h * f9(y(i) + k3, t(i+1))
+      y(i+1) = y(i) + (k1 + 2.0 * (k2 + k3) + k4) / 6.0
+      f1 = f0
+      f2 = f1
+      f3 = f2
+    end do
+    do i = 3, n-1
+      write(ou,'(F12.5,4x,ES23.16)') t(i), y(i)
+      h = t(i+1) - t(i)
+      f0 = f9(y(i), t(i))
+      w = y(i) + h * (55.0 * f0 - 59.0 * f1 + 37.0 * f2 - 9.0 * f3) / 24.0
+      fw = f9(w, t(i+1))
+      y(i+1) = y(i) + h * (9.0 * fw + 19.0 * f0 - 5.0 * f1 + f2) / 24.0
+      f1 = f0
+      f2 = f1
+      f3 = f2
+    end do
+
+    write(ou,'(F12.5,4x,ES23.16)') t(n), y(n)
+
+end subroutine pc4
+
 end module ode
